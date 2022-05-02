@@ -31,26 +31,6 @@ const targetNetwork = NETWORKS.mumbai;
 const DEBUG = true;
 const NETWORKCHECK = true;
 
-// EXAMPLE STARTING JSON:
-const STARTING_JSON = {
-  description: "It's actually a bison?",
-  external_url: "https://austingriffith.com/portfolio/paintings/",
-  image: "https://austingriffith.com/images/paintings/buffalo.jpg",
-  name: "Buffalo",
-  attributes: [
-    {
-      trait_type: "BackgroundColor",
-      value: "green",
-    },
-    {
-      trait_type: "Eyes",
-      value: "googly",
-    },
-  ],
-};
-
-// helper function to "Get" from IPFS
-// you usually go content.toString() after this...
 const getFromIPFS = async hashToGet => {
   for await (const file of ipfs.get(hashToGet)) {
     console.log(file.path);
@@ -64,30 +44,23 @@ const getFromIPFS = async hashToGet => {
   }
 };
 
-// 🛰 providers
 if (DEBUG) console.log("📡 Connecting to Mainnet Ethereum");
 
 const scaffoldEthProvider = navigator.onLine ? new ethers.providers.StaticJsonRpcProvider("https://rpc.scaffoldeth.io:48544") : null;
 const mainnetInfura = navigator.onLine ? new ethers.providers.StaticJsonRpcProvider("https://mainnet.infura.io/v3/" + INFURA_ID) : null;
 
-// Your local provider is usually pointed at your local blockchain
 const localProviderUrl = targetNetwork.rpcUrl;
 const localProviderUrlFromEnv = process.env.REACT_APP_PROVIDER ? process.env.REACT_APP_PROVIDER : localProviderUrl;
 if (DEBUG) console.log("🏠 Connecting to provider:", localProviderUrlFromEnv);
 const localProvider = new ethers.providers.StaticJsonRpcProvider(localProviderUrlFromEnv);
 
-// 🔭 block explorer URL
 const blockExplorer = targetNetwork.blockExplorer;
 
-/*
-  Web3 modal helps us "connect" external wallets:
-*/
 const web3Modal = new Web3Modal({
-  // network: "mainnet", // optional
-  cacheProvider: true, // optional
+  cacheProvider: true, 
   providerOptions: {
     walletconnect: {
-      package: WalletConnectProvider, // required
+      package: WalletConnectProvider, 
       options: {
         infuraId: INFURA_ID,
       },
@@ -107,12 +80,11 @@ function App(props) {
 
   const [injectedProvider, setInjectedProvider] = useState();
   const [address, setAddress] = useState();
-  /* 💵 This hook will get the price of ETH from 🦄 Uniswap: */
+
   const price = useExchangePrice(targetNetwork, mainnetProvider);
 
-  /* 🔥 This hook will get the price of Gas from ⛽️ EtherGasStation */
+
   const gasPrice = useGasPrice(targetNetwork, "fast");
-  // Use your injected provider from 🦊 Metamask or if you don't have it then instantly generate a 🔥 burner wallet.
   const userSigner = useUserSigner(injectedProvider, localProvider);
 
   useEffect(() => {
@@ -125,57 +97,32 @@ function App(props) {
     getAddress();
   }, [userSigner]);
 
-  // You can warn the user if you would like them to be on a specific network
   const localChainId = localProvider && localProvider._network && localProvider._network.chainId;
   const selectedChainId =
     userSigner && userSigner.provider && userSigner.provider._network && userSigner.provider._network.chainId;
 
-  // For more hooks, check out 🔗eth-hooks at: https://www.npmjs.com/package/eth-hooks
-
-  // The transactor wraps transactions and provides notificiations
   const tx = Transactor(userSigner, gasPrice);
-
-  // Faucet Tx can be used to send funds from the faucet
   const faucetTx = Transactor(localProvider, gasPrice);
-
-  // 🏗 scaffold-eth is full of handy hooks like this one to get your balance:
   const yourLocalBalance = useBalance(localProvider, address);
-
-  // Just plug in different 🛰 providers to get your balance on different chains:
   const yourMainnetBalance = useBalance(mainnetProvider, address);
-
-  // Load in your local 📝 contract and read a value from it:
   const readContracts = useContractLoader(localProvider);
-
-  // If you want to make 🔐 write transactions to your contracts, use the userSigner:
   const writeContracts = useContractLoader(userSigner, { chainId: localChainId });
-
-  // EXTERNAL CONTRACT EXAMPLE:
-  //
-  // If you want to bring in the mainnet DAI contract it would look like:
   const mainnetContracts = useContractLoader(mainnetProvider);
 
-  // If you want to call a function on a new block
   useOnBlock(mainnetProvider, () => {
     console.log(`⛓ A new mainnet block is here: ${mainnetProvider._lastBlockNumber}`);
   });
 
-  // Then read your DAI balance like:
   const myMainnetDAIBalance = useContractReader(mainnetContracts, "DAI", "balanceOf", [
     "0x34aA3F359A9D614239015126635CE7732c18fDF3",
   ]);
 
-  // keep track of a variable from the contract in the local React state:
   const balance = useContractReader(readContracts, "NFT", "balanceOf", [address]);
   console.log("🤗 balance:", balance);
 
-  // 📟 Listen for broadcast events
   const transferEvents = useEventListener(readContracts, "NFT", "Transfer", localProvider, 1);
   console.log("📟 Transfer events:", transferEvents);
 
-  //
-  // 🧠 This effect will update yourCollectibles by polling when your balance changes
-  //
   const yourBalance = balance && balance.toNumber && balance.toNumber();
   const [yourCollectibles, setYourCollectibles] = useState();
 
@@ -211,9 +158,8 @@ function App(props) {
     updateYourCollectibles();
   }, [address, yourBalance]);
 
-  //
-  // 🧫 DEBUG 👨🏻‍🔬
-  //
+
+  // DEBUG
   useEffect(() => {
     if (
       DEBUG &&
@@ -226,17 +172,7 @@ function App(props) {
       writeContracts &&
       mainnetContracts
     ) {
-      console.log("_____________________________________ 🏗 scaffold-eth _____________________________________");
-      console.log("🌎 mainnetProvider", mainnetProvider);
-      console.log("🏠 localChainId", localChainId);
-      console.log("👩‍💼 selected address:", address);
-      console.log("🕵🏻‍♂️ selectedChainId:", selectedChainId);
-      console.log("💵 yourLocalBalance", yourLocalBalance ? ethers.utils.formatEther(yourLocalBalance) : "...");
-      console.log("💵 yourMainnetBalance", yourMainnetBalance ? ethers.utils.formatEther(yourMainnetBalance) : "...");
-      console.log("📝 readContracts", readContracts);
-      console.log("🌍 DAI contract on mainnet:", mainnetContracts);
-      console.log("💵 yourMainnetDAIBalance", myMainnetDAIBalance);
-      console.log("🔐 writeContracts", writeContracts);
+      console.log("_____________________________________Testing_____________________________________");
     }
   }, [
     mainnetProvider,
@@ -329,7 +265,6 @@ function App(props) {
       setInjectedProvider(new ethers.providers.Web3Provider(provider));
     });
 
-    // Subscribe to session disconnection
     provider.on("disconnect", (code, reason) => {
       console.log(code, reason);
       logoutOfWeb3Modal();
@@ -352,7 +287,6 @@ function App(props) {
 
   const [faucetClicked, setFaucetClicked] = useState(false);
   
-  const [yourJSON, setYourJSON] = useState(STARTING_JSON);
   const [sending, setSending] = useState();
   const [ipfsHash, setIpfsHash] = useState();
   const [ipfsDownHash, setIpfsDownHash] = useState();

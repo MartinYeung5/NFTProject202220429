@@ -1,5 +1,5 @@
 import { useState } from "react";
-// Hook from useHooks! (https://usehooks.com/useLocalStorage/)
+
 export default function useLocalStorage(key, initialValue, ttl) {
   // State to store our value
   // Pass initial state function to useState so logic is only executed once
