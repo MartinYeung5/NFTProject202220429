@@ -323,6 +323,16 @@ function App(props) {
               Transfers
             </Link>
           </Menu.Item>
+          <Menu.Item key="/apex">
+            <Link
+              onClick={() => {
+                setRoute("/apex");
+              }}
+              to="/apex"
+            >
+              User Record
+            </Link>
+          </Menu.Item>
         </Menu>
 
         <Switch>
@@ -382,21 +392,9 @@ function App(props) {
             </div>
           </Route>
 
-          <Route path="/transfers">
+          <Route path="/apex">
             <div style={{ width: 600, margin: "auto", marginTop: 32, paddingBottom: 32 }}>
-              <List
-                bordered
-                dataSource={transferEvents}
-                renderItem={item => {
-                  return (
-                    <List.Item key={item[0] + "_" + item[1] + "_" + item.blockNumber + "_" + item[2].toNumber()}>
-                      <span style={{ fontSize: 16, marginRight: 8 }}>#{item[2].toNumber()}</span>
-                      <Address address={item[0]} ensProvider={mainnetProvider} fontSize={16} /> =&gt;
-                      <Address address={item[1]} ensProvider={mainnetProvider} fontSize={16} />
-                    </List.Item>
-                  );
-                }}
-              />
+            <a href = "https://apex.oracle.com/pls/apex/r/martin2022/user-data/home?session=6017409063903" target = "_self">View User Record</a>
             </div>
           </Route>
 
