@@ -5,7 +5,7 @@ import React from "react";
 
 export default function Header() {
   return (
-    <a href="https://github.com/austintgriffith/scaffold-eth" target="_blank" rel="noopener noreferrer">
+    <a href="https://github.com/MartinYeung5/hackathon_project" target="_blank" rel="noopener noreferrer">
       <PageHeader
         title="Goal Diggers"
         //subTitle=""
